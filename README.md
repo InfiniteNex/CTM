@@ -2,7 +2,7 @@
 
 ## Main files in order of operation:
 ### 1) CTMdata.ahk - extract distributor data from the CTM tool
-### 2) ctmdatahandler.pyw - process the extracted data into a usable table for easy copying into the work table. (Automatically executed at end of CTMdata.ahk)
+### 2) ctmdatahandler.pyw - process the extracted data into a usable table for easy copying into the work table.
 
 _______________________________
 
