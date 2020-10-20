@@ -27,6 +27,15 @@ for line in special_file:
     special.append(line)
 
 
+#load ignore list
+ignore = []
+file = open('distignore.txt', 'r')
+ignore_file = file.readlines()
+file.close()
+
+for line in ignore_file:
+    ignore.append(line)
+
 #read data file
 df = pd.read_excel('CTMdataStorage.xlsx')
 #remove rows that are duplicates of the header
@@ -84,9 +93,16 @@ per = ws['A2']
 per.value = "20%s-%s" % (str(per.value)[0:2], str(per.value)[2:4])
 perstr = str(ws['A2'].value)
 
+#delete ignore cases
+for cell in ws['C']:
+    if cell.value in ignore:
+        ws.delete_rows(idx=cell.row , amount=1)
+
 #unmerge period cell and fill to end of column
 a_last = len(ws['A'])
 # ws.unmerge_cells('A2:A%i' % (a_last)) OBSOLETE (ROW 58)
+
+
 
 #A
 for i in range(3, a_last+1):

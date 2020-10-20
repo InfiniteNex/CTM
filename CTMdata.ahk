@@ -32,7 +32,6 @@ if (loop <= 32)
 	goto, ChangeCountry
 else
 {
-	Run, ctmdatahandler.pyw
 	MsgBox, "Finished"
 	ExitApp
 }
