@@ -19,11 +19,7 @@ MsgBox, "Error: Open Distribution Panel CCT @GfK and restart the process."
 ExitApp
 }
 	
-WinActivate, CTMdataStorage.xlsx
-WinWait, CTMdataStorage.xlsx
-Send, ^{up}
-Sleep, 100
-Send, ^{left}
+
 
 Mainloop:
 WinActivate, Distribution Panel CCT @GfK - [dip.gfk.com][01.02.07] - \\Remote

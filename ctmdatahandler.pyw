@@ -198,9 +198,13 @@ wb.save('result.xlsx')
 wb.close()
 
 
-#empty CTMdataStorage.xlsx for future use
-wb = openpyxl.load_workbook(filename='CTMdataStorage.xlsx')
-ws = wb.active
-ws.delete_cols(idx=1, amount=11)
-wb.save('CTMdataStorage.xlsx')
-wb.close()
+# delete and recreate CTMdataStorage.xlsx
+if os.path.exists('CTMdataStorage.xlsx'):
+    os.remove('CTMdataStorage.xlsx')
+else:
+    pass
+
+wb = openpyxl.Workbook()
+# ws = wb.active
+# ws.title = 'data'
+wb.save(filename='CTMdataStorage.xlsx')
