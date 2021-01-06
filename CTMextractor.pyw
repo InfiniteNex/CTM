@@ -1,5 +1,6 @@
 import keyboard
 import win32gui
+import win32ui
 import os
 import time
 import pyautogui
@@ -8,6 +9,7 @@ import pandas as pd
 import clipboard
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+
 
 """ ALL POSSIBLE WINDOWS'S TITLES
 Distribution Panel CCT @GfK - [dip.gfk.com][01.02.07] - \\\\Remote
@@ -21,7 +23,7 @@ title = "Distribution Panel CCT @GfK - [dip.gfk.com]"
 no_records_found = "TDistribution Panel CCT *WARNING - \\\\Remote"
 change_country_error = "Distribution Panel CCT *ERROR - \\\\Remote"
 
-total_countries = 33
+total_countries = 1 #total: 33
 
 data_list = []
 
@@ -35,7 +37,7 @@ file.close()
 
 for line in alias_file:
     l = line.split(sep="=")
-    alias[l[0]] = l[1]
+    alias[l[0]] = l[1].strip("\n")
 
 
 #load special cases
@@ -301,3 +303,8 @@ for cell in ws['C']:
 ws.column_dimensions['C'].width = 26.71
 wb.save('result.xlsx')
 wb.close()
+
+
+# display message box when finished
+# win32ui.MessageBox("Downloading data from CCT has finished.", "Alert! CCT data downloader")
+pyautogui.alert(text='Downloading data from CCT has finished.', title='Alert! CCT data downloader', button='OK')
