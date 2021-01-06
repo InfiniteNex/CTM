@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import simpledialog
+from tkinter import messagebox as tkMessageBox
 import win32api
 import win32gui
 import win32process
@@ -41,8 +42,11 @@ coords = [0,0,0,0]
 dark_blue = "#00134d"
 
 
-# window_title = "Distribution Panel CCT @GfK"
-window_title = "Notepad"
+window_title = "Distribution Panel CCT @GfK"
+finished = "Alert! CCT data downloader"
+
+# Close after 1 cycle prompt
+prompt = False
 
 
 def load_coords():
@@ -75,6 +79,23 @@ def check_coordinates():
         start_check[1] = 0
         start_check[2] = 0
 
+def load_cycles():
+    global prompt
+    try:
+        file = open("cycles.txt", "r").readlines()
+        for line in file:
+            line = line.split("\n")
+            if line[0] == "True":
+                prompt = True
+            elif line[0] == "False":
+                prompt = False
+    except FileNotFoundError:
+        print("File \"cycles.txt\" not found.")
+
+def save_cycles():
+    file = open("cycles.txt", "w")
+    file.write(str(prompt)+"\n")
+    file.close()
 
 
 def get_mouse_pos(event, set_button):
@@ -98,6 +119,7 @@ def get_mouse_pos(event, set_button):
 
 class UI(tk.Frame):
     def __init__(self, parent):
+        global prompt
 
         tk.Frame.__init__(self, parent)
         backgr = tk.Frame(self, borderwidth=1, relief="sunken")
@@ -105,7 +127,7 @@ class UI(tk.Frame):
         
 
         self.mainframe = tk.Frame(self, bg=dark_blue)
-        self.mainframe.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.5)
+        self.mainframe.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.7)
 
         self.dpc = tk.Label(self.mainframe, text="Distribution Panel CCT")
         self.dpc.grid(row=0, column=0)
@@ -133,7 +155,17 @@ class UI(tk.Frame):
         tk.Button(self.mainframe, text="Check").grid(row=2, column=3, sticky="nw", pady=10)
 
         self.start_button = tk.Button(self, text="Start", command=self.start_script)
-        self.start_button.place(relx=0.015, rely=0.65, relwidth=0.97, relheight=0.30)
+        self.start_button.place(relx=0.015, rely=0.68, relwidth=0.97, relheight=0.30)
+
+
+        # Close program after 1 cycle
+        self.what = tk.Button(self.mainframe, text="Close the program after 1 cycle?", command=self.cycles)
+        self.what.grid(row=3, column=0, columnspan=2, sticky="nw", pady=10)
+        self.cycle = tk.Label(self.mainframe, text=str(prompt))
+        self.cycle.grid(row=3, column=3, sticky="nw", pady=10)
+
+        
+
 
 
 #==========TIMER===================
@@ -151,6 +183,14 @@ class UI(tk.Frame):
 
         self.coordsdrop.configure(text="x=%i ,y=%i" % (coords[0], coords[1]))
         self.coordsrow.configure(text="x=%i ,y=%i" % (coords[2], coords[3]))
+
+        if override:
+            for proc in get_app_list():
+                if finished in proc[1]:
+                    override = False
+                    self.start_button.configure(text="Start", state=tk.NORMAL)
+                    if prompt:
+                        raise SystemExit
 
         if window:
             self.window_found.configure(image = self.photo1)
@@ -179,7 +219,14 @@ class UI(tk.Frame):
 
         override = True
         self.start_button.configure(text="Running... Please Wait.", state=tk.DISABLED)
-        os.startfile("coordinates.txt")
+        os.startfile("CTMextractor.pyw")
+
+
+    def cycles(self):
+        global prompt
+        prompt = not prompt
+        self.cycle.configure(text=str(prompt))
+        save_cycles()
 
 
 class CoordsSet():
@@ -242,7 +289,7 @@ if __name__ == '__main__':
     root.attributes("-alpha", 0.95)
     root.geometry("%ix%i+%i+%i" % (scr_width/3.5, scr_height/3, scr_width/2, scr_height/3)) #WidthxHeight and x+y of main window
 
-
+    load_cycles()
     load_coords()
 
     ui = UI(root)
