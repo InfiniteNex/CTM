@@ -183,14 +183,14 @@ def ctm(x1, y1, x2, y2):
 
 
     # save DataFrame to excel file
-    writer = pd.ExcelWriter('result.xlsx')
+    writer = pd.ExcelWriter('PeriodData.xlsx')
     new.to_excel(writer, "data", merge_cells=False)
     df2.to_excel(writer, "data" ,startcol=4, index=False, merge_cells=False)
     writer.save()
 
 
     # open with excel editor
-    wb = openpyxl.load_workbook(filename='result.xlsx')
+    wb = openpyxl.load_workbook(filename='PeriodData.xlsx')
     ws = wb.active
     # delete 0 values from "Done" column
 
@@ -314,10 +314,9 @@ def ctm(x1, y1, x2, y2):
 
 
     ws.column_dimensions['C'].width = 26.71
-    wb.save('result.xlsx')
+    wb.save('PeriodData.xlsx')
     wb.close()
 
 
     # display message box when finished
-    # win32ui.MessageBox("Downloading data from CCT has finished.", "Alert! CCT data downloader")
     pyautogui.alert(text='Downloading data from CCT has finished.', title='Alert! CCT data downloader', button='OK')

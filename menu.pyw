@@ -31,11 +31,11 @@ wmx = None
 # CCT opened
 # coords 1
 # coords 2
-# result.xlsx open/closed
+# PeriodData.xlsx open/closed
 # 1 = not ready to start data extraction
 # 0 = can start script
 start_check = [1,1,1,0]
-xlsx = "result.xlsx"
+xlsx = "PeriodData.xlsx"
 override = False
 
 # index 0,1 = country dropdown menu
@@ -79,7 +79,7 @@ def check_CCT_availability():
             if window_title in proc[1]:
                 return True
 
-def check_result():
+def check_PeriodData():
         for proc in get_app_list():
             if xlsx in proc[1]:
                 return True
@@ -202,7 +202,7 @@ class UI(tk.Frame):
         global override
 
         window = check_CCT_availability()
-        excel = check_result()
+        excel = check_PeriodData()
         check_coordinates()
 
         self.coordsdrop.configure(text="x=%i ,y=%i" % (coords[0], coords[1]))
@@ -232,7 +232,7 @@ class UI(tk.Frame):
             if 1 not in start_check:
                 self.start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
             else:
-                self.start_button.configure(text="Coordinates not set,\nResult.xlsx is open\nor CCT window is not open.", bg="gray", disabledforeground="red", state=tk.DISABLED)
+                self.start_button.configure(text="Coordinates not set,\nPeriodData.xlsx is open\nor CCT window is not open.", bg="gray", disabledforeground="red", state=tk.DISABLED)
         else:
             pass
 
