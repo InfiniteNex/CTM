@@ -9,7 +9,7 @@ from pyWinActivate import win_activate, get_app_list
 from CTMextractor import ctm
 import keyboard
 import time
-from multiprocessing import Process
+import threading
 
 workdir = os.getcwd()
 icons_dir = workdir + "\\icons\\"
@@ -251,8 +251,8 @@ class UI(tk.Frame):
         self.start_button.configure(text="Running... Please Wait.", bg="gray", state=tk.DISABLED)
 
 
-        # process = Process(target=ctm, args=(x1=coords[0], y1=coords[1], x2=coords[2], y2=coords[3]))
-        process = Process(target=ctm, args=(coords[0], coords[1], coords[2], coords[3]))
+        # ctm(x1=coords[0], y1=coords[1], x2=coords[2], y2=coords[3]))
+        process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3]))
         process.start()
         
 
