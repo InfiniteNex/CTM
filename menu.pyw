@@ -6,6 +6,8 @@ import win32gui
 import win32process
 import os
 from pyWinActivate import win_activate, get_app_list
+from CTMextractor import ctm
+import keyboard
 
 workdir = os.getcwd()
 icons_dir = workdir + "\\icons\\"
@@ -29,9 +31,11 @@ wmx = None
 # CCT opened
 # coords 1
 # coords 2
+# result.xlsx open/closed
 # 1 = not ready to start data extraction
 # 0 = can start script
-start_check = [1,1,1]
+start_check = [1,1,1,0]
+xlsx = "result.xlsx"
 override = False
 
 # index 0,1 = country dropdown menu
@@ -40,6 +44,9 @@ coords = [0,0,0,0]
 
 #colors
 dark_blue = "#00134d"
+dark_gray = "#323f54"
+purple = "#7d25b0"
+dirty_white = "#ebe8ed"
 
 
 window_title = "Distribution Panel CCT @GfK"
@@ -49,6 +56,8 @@ finished = "Alert! CCT data downloader"
 prompt = False
 
 
+        
+        
 
 def load_coords():
     try:
@@ -68,6 +77,11 @@ def change_coords():
 def check_CCT_availability():
         for proc in get_app_list():
             if window_title in proc[1]:
+                return True
+
+def check_result():
+        for proc in get_app_list():
+            if xlsx in proc[1]:
                 return True
 
 def check_coordinates():
@@ -132,11 +146,14 @@ class UI(tk.Frame):
         backgr.pack(side="bottom", fill="both", expand=True)
         
 
-        self.mainframe = tk.Frame(self, bg=dark_blue)
+        self.mainframe = tk.Frame(self)
         self.mainframe.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.7)
 
+        self.mainframe.grid_columnconfigure(0, weight=1)
+        
+
         self.dpc = tk.Label(self.mainframe, text="Distribution Panel CCT")
-        self.dpc.grid(row=0, column=0)
+        self.dpc.grid(row=0, column=0, sticky="nw", pady=10)
 
         self.photo0 = tk.PhotoImage(file = icons_dir+"not_found.png")
         self.photo1 = tk.PhotoImage(file = icons_dir+"found.png")
@@ -151,24 +168,24 @@ class UI(tk.Frame):
         self.coordsdrop = tk.Label(self.mainframe)
         self.coordsdrop.grid(row=1, column=1, sticky="nw", pady=10)
 
-        tk.Button(self.mainframe, text="Change", command=lambda set_button="drop": self.set_coords(set_button)).grid(row=1, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check", command=lambda parent=root : CoordsCheck(parent)).grid(row=1, column=3, sticky="nw", pady=10)
+        tk.Button(self.mainframe, text="Change", bg=purple,command=lambda set_button="drop": self.set_coords(set_button)).grid(row=1, column=2, sticky="nw", pady=10, padx=10)
+        tk.Button(self.mainframe, text="Check", bg=purple, command=lambda parent=root : CoordsCheck(parent)).grid(row=1, column=3, sticky="ne", pady=10)
 
         self.coordsrow = tk.Label(self.mainframe)
         self.coordsrow.grid(row=2, column=1, sticky="nw", pady=10)
 
-        tk.Button(self.mainframe, text="Change", command=lambda set_button="row": self.set_coords(set_button)).grid(row=2, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check", command=lambda parent=root : CoordsCheck(parent)).grid(row=2, column=3, sticky="nw", pady=10)
+        tk.Button(self.mainframe, text="Change", bg=purple, command=lambda set_button="row": self.set_coords(set_button)).grid(row=2, column=2, sticky="nw", pady=10, padx=10)
+        tk.Button(self.mainframe, text="Check", bg=purple, command=lambda parent=root : CoordsCheck(parent)).grid(row=2, column=3, sticky="ne", pady=10)
 
-        self.start_button = tk.Button(self, text="Start", command=self.start_script)
+        self.start_button = tk.Button(self, text="Start", bg="green", command=self.start_script)
         self.start_button.place(relx=0.015, rely=0.68, relwidth=0.97, relheight=0.30)
 
 
         # Close program after 1 cycle
-        self.what = tk.Button(self.mainframe, text="Close the program after 1 cycle?", command=self.cycles)
+        self.what = tk.Button(self.mainframe, text="Close the program after 1 cycle?", bg=purple, command=self.cycles)
         self.what.grid(row=3, column=0, columnspan=2, sticky="nw", pady=10)
         self.cycle = tk.Label(self.mainframe, text=str(prompt))
-        self.cycle.grid(row=3, column=3, sticky="nw", pady=10)
+        self.cycle.grid(row=3, column=3, sticky="ne", pady=10)
 
         
 
@@ -185,6 +202,7 @@ class UI(tk.Frame):
         global override
 
         window = check_CCT_availability()
+        excel = check_result()
         check_coordinates()
 
         self.coordsdrop.configure(text="x=%i ,y=%i" % (coords[0], coords[1]))
@@ -194,7 +212,7 @@ class UI(tk.Frame):
             for proc in get_app_list():
                 if finished in proc[1]:
                     override = False
-                    self.start_button.configure(text="Start", state=tk.NORMAL)
+                    self.start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
                     if prompt:
                         raise SystemExit
 
@@ -205,12 +223,16 @@ class UI(tk.Frame):
             self.window_found.configure(image = self.photo0)
             start_check[0] = 1
 
+        if excel:
+            start_check[3] = 1
+        else:
+            start_check[3] = 0
         
         if override == False:
             if 1 not in start_check:
-                self.start_button.configure(text="Start", state=tk.NORMAL)
+                self.start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
             else:
-                self.start_button.configure(text="Coordinates not set \nor CCT window is not open.", state=tk.DISABLED)
+                self.start_button.configure(text="Coordinates not set,\nResult.xlsx is open\nor CCT window is not open.", bg="gray", disabledforeground="red", state=tk.DISABLED)
         else:
             pass
 
@@ -224,9 +246,9 @@ class UI(tk.Frame):
         global override
 
         override = True
-        self.start_button.configure(text="Running... Please Wait.", state=tk.DISABLED)
-        os.startfile("CTMextractor.pyw")
-
+        self.start_button.configure(text="Running... Please Wait.", bg="gray", state=tk.DISABLED)
+        ctm()
+        
 
     def cycles(self):
         global prompt
@@ -315,7 +337,7 @@ if __name__ == '__main__':
 
     root.option_add('*font', ("Helvetica", 15))
     root.option_add('*foreground', ("white"))
-    root.option_add('*background', ("#00134d"))
+    root.option_add('*background', (dark_gray))
     
     root.configure(background="yellow")
     root.wm_attributes("-topmost", 1)
