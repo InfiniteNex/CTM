@@ -10,6 +10,10 @@ import clipboard
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 
+def terminate():
+    if keyboard.is_pressed('num *'):
+        pyautogui.alert(text='Process was force stopped.', title='Alert! CCT data downloader', button='OK')
+        raise SystemExit
 
 """ ALL POSSIBLE WINDOWS'S TITLES
 Distribution Panel CCT @GfK - [dip.gfk.com][01.02.07] - \\\\Remote
@@ -23,7 +27,7 @@ title = "Distribution Panel CCT @GfK - [dip.gfk.com]"
 no_records_found = "TDistribution Panel CCT *WARNING - \\\\Remote"
 change_country_error = "Distribution Panel CCT *ERROR - \\\\Remote"
 
-total_countries = 1 #total: 33
+total_countries = 33 #total: 33
 
 data_list = []
 
@@ -80,6 +84,7 @@ def get_country_data():
         copy_data()
 
 def change_country():
+    terminate()
     pyautogui.click(x=332 ,y=114)
     sleep()
     press('down')
@@ -97,6 +102,7 @@ def change_country():
     win_wait_active(win_to_wait=title, exception=no_records_found, message=False)
     sleep()
 
+    terminate()
     # check and clear error if it exists
     try:
         error_check(title=change_country_error)
@@ -136,6 +142,7 @@ MAINLOOP
 win_activate(window_title=title, partial_match=True)
 win_wait_active(win_to_wait=title, message=False)
 for i in range(total_countries):
+    terminate()
     get_country_data()
 
 

@@ -49,6 +49,7 @@ finished = "Alert! CCT data downloader"
 prompt = False
 
 
+
 def load_coords():
     try:
         file = open("coordinates.txt", "r").readlines()
@@ -70,14 +71,19 @@ def check_CCT_availability():
                 return True
 
 def check_coordinates():
-    sums = sum(coords)
+    sums1 = sum(coords[0:1])
+    sums2 = sum(coords[2:3])
     
-    if sums == 0:
+    if sums1 == 0:
         start_check[1] = 1
-        start_check[2] = 1
     else:
         start_check[1] = 0
+
+    if sums2 == 0:
+        start_check[2] = 1
+    else:
         start_check[2] = 0
+    
 
 def load_cycles():
     global prompt
@@ -146,13 +152,13 @@ class UI(tk.Frame):
         self.coordsdrop.grid(row=1, column=1, sticky="nw", pady=10)
 
         tk.Button(self.mainframe, text="Change", command=lambda set_button="drop": self.set_coords(set_button)).grid(row=1, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check").grid(row=1, column=3, sticky="nw", pady=10)
+        tk.Button(self.mainframe, text="Check", command=lambda parent=root : CoordsCheck(parent)).grid(row=1, column=3, sticky="nw", pady=10)
 
         self.coordsrow = tk.Label(self.mainframe)
         self.coordsrow.grid(row=2, column=1, sticky="nw", pady=10)
 
         tk.Button(self.mainframe, text="Change", command=lambda set_button="row": self.set_coords(set_button)).grid(row=2, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check").grid(row=2, column=3, sticky="nw", pady=10)
+        tk.Button(self.mainframe, text="Check", command=lambda parent=root : CoordsCheck(parent)).grid(row=2, column=3, sticky="nw", pady=10)
 
         self.start_button = tk.Button(self, text="Start", command=self.start_script)
         self.start_button.place(relx=0.015, rely=0.68, relwidth=0.97, relheight=0.30)
@@ -199,12 +205,12 @@ class UI(tk.Frame):
             self.window_found.configure(image = self.photo0)
             start_check[0] = 1
 
-        start_sum = sum(start_check)
+        
         if override == False:
-            if start_sum == 0:
-                self.start_button.configure(state=tk.NORMAL)
+            if 1 not in start_check:
+                self.start_button.configure(text="Start", state=tk.NORMAL)
             else:
-                self.start_button.configure(state=tk.DISABLED)
+                self.start_button.configure(text="Coordinates not set \nor CCT window is not open.", state=tk.DISABLED)
         else:
             pass
 
@@ -236,7 +242,6 @@ class CoordsSet():
         self.top.wm_attributes("-topmost", 1)
         self.top.attributes("-alpha", 0.5)
         self.top.attributes("-fullscreen", True)
-        # self.top.geometry("%ix%i+%i+%i" % (300, 300, 20, 20)) #WidthxHeight and x+y of main window
         self.top.geometry("%ix%i+%i+%i" % (scr_width, scr_height, scr_w_placement, 0)) #WidthxHeight and x+y of main window
         self.top.overrideredirect(True) # removes title bar
         self.top.focus_force()
@@ -248,20 +253,16 @@ class CoordsSet():
         self.linex = self.backgr.create_line(0, 0, 0, 0, width=1)
         self.liney = self.backgr.create_line(0, 0, 0, 0, width=1)
 
+        self.linexperm = self.backgr.create_line(0, 0, 0, 0, width=1)
+        self.lineyperm = self.backgr.create_line(0, 0, 0, 0, width=1)
+
         self.backgr.pack(side="bottom", fill="both", expand=True)
         self.backgr.bind("<Button-1>", lambda event, set_button=set_button : get_mouse_pos(event, set_button))
         self.backgr.bind("<Motion>", self.crosshair)
         
-
-
         tk.Label(self.backgr, text="Press \"Esc\" to close the coordinates window", bg="white" ,foreground="red", font=("Helvetica", 50)).place(relx=0.15, rely=0.85)
         
         
-
-
-
-
-
     def crosshair(self, event):
         self.mpos = win32gui.GetCursorInfo()
         self.mposxy = self.mpos[2]
@@ -270,6 +271,39 @@ class CoordsSet():
         
         self.newcoordsy = (self.mposxy[0]-50, self.mposxy[1], self.mposxy[0]+50, self.mposxy[1])
         self.backgr.coords(self.liney, self.newcoordsy)
+
+
+
+    def close_top(self, event):
+        self.top.destroy()
+
+
+
+class CoordsCheck():
+    def __init__(self, parent):
+        self.top = tk.Toplevel()
+        self.top.title("lines test")
+        self.top.wm_attributes("-topmost", 1)
+        self.top.attributes("-alpha", 0.5)
+        self.top.attributes("-fullscreen", True)
+        self.top.geometry("%ix%i+%i+%i" % (scr_width, scr_height, scr_w_placement, 0)) #WidthxHeight and x+y of main window
+        self.top.overrideredirect(True) # removes title bar
+        self.top.focus_force()
+        self.top.bind("<Key-Escape>", self.close_top)
+
+
+        self.backgr = tk.Canvas(self.top, background="white")
+
+        self.linexdrop = self.backgr.create_line(coords[0], coords[1]-50, coords[0], coords[1]+50, width=1)
+        self.lineydrop = self.backgr.create_line(coords[0]-50, coords[1], coords[0]+50, coords[1], width=1)
+
+        self.linexrow = self.backgr.create_line(coords[2], coords[3]-50, coords[2], coords[3]+50, width=1)
+        self.lineyrow = self.backgr.create_line(coords[2]-50, coords[3], coords[2]+50, coords[3], width=1)
+
+        self.backgr.pack(side="bottom", fill="both", expand=True)
+
+        
+        tk.Label(self.backgr, text="Press \"Esc\" to close the coordinates window", bg="white" ,foreground="red", font=("Helvetica", 50)).place(relx=0.15, rely=0.85)
         
 
     def close_top(self, event):
