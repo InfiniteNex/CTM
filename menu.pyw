@@ -169,13 +169,13 @@ class UI(tk.Frame):
         self.coordsdrop.grid(row=1, column=1, sticky="nw", pady=10)
 
         tk.Button(self.mainframe, text="Change", bg=purple,command=lambda set_button="drop": self.set_coords(set_button)).grid(row=1, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check", bg=purple, command=lambda parent=root : CoordsCheck(parent)).grid(row=1, column=3, sticky="ne", pady=10)
+        tk.Button(self.mainframe, text="Check", bg=purple, command=lambda parent=root : CoordsCheck(parent)).grid(row=1, column=3, rowspan=2, sticky="NS", pady=10)
 
         self.coordsrow = tk.Label(self.mainframe)
         self.coordsrow.grid(row=2, column=1, sticky="nw", pady=10)
 
         tk.Button(self.mainframe, text="Change", bg=purple, command=lambda set_button="row": self.set_coords(set_button)).grid(row=2, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check", bg=purple, command=lambda parent=root : CoordsCheck(parent)).grid(row=2, column=3, sticky="ne", pady=10)
+        
 
         self.start_button = tk.Button(self, text="Start", bg="green", command=self.start_script)
         self.start_button.place(relx=0.015, rely=0.68, relwidth=0.97, relheight=0.30)
@@ -247,7 +247,7 @@ class UI(tk.Frame):
 
         override = True
         self.start_button.configure(text="Running... Please Wait.", bg="gray", state=tk.DISABLED)
-        ctm()
+        ctm(x1=coords[0], y1=coords[1], x2=coords[2], y2=coords[3])
         
 
     def cycles(self):
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     root.wm_attributes("-topmost", 1)
     root.wm_attributes("-transparentcolor", "yellow")
     root.attributes("-alpha", 0.95)
-    root.geometry("%ix%i+%i+%i" % (scr_width/3.5, scr_height/3, scr_width/2, scr_height/3)) #WidthxHeight and x+y of main window
+    root.geometry("%ix%i+%i+%i" % (scr_width/3.5, scr_height/3, scr_width/1.5, scr_height/3)) #WidthxHeight and x+y of main window
 
     load_cycles()
     load_coords()
