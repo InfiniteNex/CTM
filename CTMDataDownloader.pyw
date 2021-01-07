@@ -333,7 +333,7 @@ class CoordsCheck():
 
 if __name__ == '__main__':
     root = tk.Tk()   
-    root.title("Main Menu")
+    root.title("CTM Data Downloader")
 
     root.option_add('*font', ("Helvetica", 15))
     root.option_add('*foreground', ("white"))
