@@ -3,8 +3,9 @@
 ## Instructions:
 ### 1) Open the CTM tool in fullscreen. Type in the desired period. Set the "Rows" menu to 2500. Leave everything else empty.
 ### 2) Open CTMDataDownloader.exe
-### 3) Press Start when ready.
-### 3) When finished, open the resulting excel file and copy over the new data into the working file.
+### 3) Set up the correct coordinates.
+### 4) Press Start when ready.
+### 5) When finished, open the resulting excel file and copy over the new data into the working file.
 
 _______________________________
 
