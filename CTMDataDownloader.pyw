@@ -12,7 +12,6 @@ import time
 import threading
 
 workdir = os.getcwd()
-icons_dir = workdir + "\\icons\\"
 
 # get screen working space without taskbar reserved space
 monitor_info = win32api.GetMonitorInfo(win32api.MonitorFromPoint((0,0)))
@@ -54,8 +53,6 @@ dirty_white = "#ebe8ed"
 window_title = "Distribution Panel CCT @GfK"
 finished = "Alert! CCT data downloader"
 
-# Close after 1 cycle prompt
-prompt = False
 
 
         
@@ -99,26 +96,6 @@ def check_coordinates():
         start_check[2] = 1
     else:
         start_check[2] = 0
-    
-
-def load_cycles():
-    global prompt
-    try:
-        file = open("cycles.txt", "r").readlines()
-        for line in file:
-            line = line.split("\n")
-            if line[0] == "True":
-                prompt = True
-            elif line[0] == "False":
-                prompt = False
-    except FileNotFoundError:
-        print("File \"cycles.txt\" not found.")
-
-def save_cycles():
-    file = open("cycles.txt", "w")
-    file.write(str(prompt)+"\n")
-    file.close()
-
 
 def get_mouse_pos(event, set_button):
     global wmx, mposxy
@@ -141,7 +118,6 @@ def get_mouse_pos(event, set_button):
 
 class UI(tk.Frame):
     def __init__(self, parent):
-        global prompt
 
         tk.Frame.__init__(self, parent)
         backgr = tk.Frame(self, borderwidth=1, relief="sunken")
@@ -152,15 +128,6 @@ class UI(tk.Frame):
         self.mainframe.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.7)
 
         self.mainframe.grid_columnconfigure(0, weight=1)
-        
-
-        self.dpc = tk.Label(self.mainframe, text="Distribution Panel CCT")
-        self.dpc.grid(row=0, column=0, sticky="nw", pady=10)
-
-        self.photo0 = tk.PhotoImage(file = icons_dir+"not_found.png")
-        self.photo1 = tk.PhotoImage(file = icons_dir+"found.png")
-        self.window_found = tk.Label(self.mainframe, image = self.photo0)
-        self.window_found.grid(row=0, column=1, pady=10)
         
         
         tk.Label(self.mainframe, text="Country").grid(row=1, column=0, sticky="nw", pady=10)
@@ -181,15 +148,6 @@ class UI(tk.Frame):
 
         self.start_button = tk.Button(self, text="Start", bg="green", command=self.start_script)
         self.start_button.place(relx=0.015, rely=0.68, relwidth=0.97, relheight=0.30)
-
-
-        # Close program after 1 cycle
-        self.what = tk.Button(self.mainframe, text="Close the program after 1 cycle?", bg=purple, command=self.cycles)
-        self.what.grid(row=3, column=0, columnspan=2, sticky="nw", pady=10)
-        self.cycle = tk.Label(self.mainframe, text=str(prompt))
-        self.cycle.grid(row=3, column=3, sticky="ne", pady=10)
-
-        
 
 
 
@@ -215,14 +173,10 @@ class UI(tk.Frame):
                 if finished in proc[1]:
                     override = False
                     self.start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
-                    if prompt:
-                        raise SystemExit
 
         if window:
-            self.window_found.configure(image = self.photo1)
             start_check[0] = 0
         else:
-            self.window_found.configure(image = self.photo0)
             start_check[0] = 1
 
         if excel:
@@ -240,6 +194,7 @@ class UI(tk.Frame):
 
         self.loop.after(1000, self.timer)
 
+    
 
     def set_coords(self, set_button):
         CoordsSet(root, set_button)
@@ -255,13 +210,6 @@ class UI(tk.Frame):
         process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3]))
         process.start()
         
-
-
-    def cycles(self):
-        global prompt
-        prompt = not prompt
-        self.cycle.configure(text=str(prompt))
-        save_cycles()
 
 
 class CoordsSet():
@@ -350,9 +298,8 @@ if __name__ == '__main__':
     root.wm_attributes("-topmost", 1)
     root.wm_attributes("-transparentcolor", "yellow")
     root.attributes("-alpha", 0.95)
-    root.geometry("%ix%i+%i+%i" % (scr_width/3.5, scr_height/3, scr_width/1.5, scr_height/3)) #WidthxHeight and x+y of main window
+    root.geometry("%ix%i+%i+%i" % (500, scr_height/3, 750, 450)) #WidthxHeight and x+y of main window
 
-    load_cycles()
     load_coords()
 
     ui = UI(root)
