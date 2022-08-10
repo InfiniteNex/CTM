@@ -1,3 +1,5 @@
+from ast import Global
+from cProfile import label
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox as tkMessageBox
@@ -11,37 +13,14 @@ import keyboard
 import time
 import threading
 
-workdir = os.getcwd()
-
-# get screen working space without taskbar reserved space
-monitor_info = win32api.GetMonitorInfo(win32api.MonitorFromPoint((0,0)))
-work_area = monitor_info.get("Work")
-scr_width = win32api.GetSystemMetrics(0)
-scr_height = win32api.GetSystemMetrics(1) - (win32api.GetSystemMetrics(1) % work_area[3]) # shorten window if taskbar is on the bottom of the screen
 
 
-
-
-monitor_count = len(win32api.EnumDisplayMonitors()) #check how many monitors are plugged in
-scr_w_placement = scr_width*monitor_count-scr_width-(win32api.GetSystemMetrics(0) % work_area[2]) # placement of the window based on number of monitors
-
-
-wmx = None
-
-
-# CCT opened
-# coords 1
-# coords 2
-# PeriodData.xlsx open/closed
-# 1 = not ready to start data extraction
-# 0 = can start script
-start_check = [1,1,1,0]
-xlsx = "PeriodData.xlsx"
-override = False
 
 # index 0,1 = country dropdown menu
 # index 2,3 = first data row
 coords = [0,0,0,0]
+
+finished = "Alert! CCT data downloader"
 
 #colors
 dark_blue = "#00134d"
@@ -50,55 +29,12 @@ purple = "#7d25b0"
 dirty_white = "#ebe8ed"
 
 
-window_title = "Distribution Panel CCT @GfK"
-finished = "Alert! CCT data downloader"
+keyboard.add_hotkey("ctrl+alt+b", lambda: set_mouse_pos("drop"))
+keyboard.add_hotkey("ctrl+alt+m", lambda: set_mouse_pos("row"))
 
 
-
-        
-        
-
-def load_coords():
-    try:
-        file = open("coordinates.txt", "r").readlines()
-        for i, line in enumerate(file):
-           line = line.split("\n")
-           coords[i] = (int(line[0]))
-    except FileNotFoundError:
-        print("File \"coordinates.txt\" not found.")
-
-def change_coords():
-    file = open("coordinates.txt", "w")
-    for i in range(4):
-        file.write(str(coords[i])+"\n")
-    file.close()
-
-def check_CCT_availability():
-        for proc in get_app_list():
-            if window_title in proc[1]:
-                return True
-
-def check_PeriodData():
-        for proc in get_app_list():
-            if xlsx in proc[1]:
-                return True
-
-def check_coordinates():
-    sums1 = sum(coords[0:1])
-    sums2 = sum(coords[2:3])
-    
-    if sums1 == 0:
-        start_check[1] = 1
-    else:
-        start_check[1] = 0
-
-    if sums2 == 0:
-        start_check[2] = 1
-    else:
-        start_check[2] = 0
-
-def get_mouse_pos(event, set_button):
-    global wmx, mposxy
+def set_mouse_pos(set_button):
+    global mposxy
     # mouse pos on screen
     try:
         mpos = win32gui.GetCursorInfo()
@@ -116,193 +52,113 @@ def get_mouse_pos(event, set_button):
 
     change_coords()
 
-class UI(tk.Frame):
-    def __init__(self, parent):
+def load_coords():
+    try:
+        file = open("coordinates.txt", "r").readlines()
+        for i, line in enumerate(file):
+           line = line.split("\n")
+           coords[i] = (int(line[0]))
+    except FileNotFoundError:
+        print("File \"coordinates.txt\" not found.")
 
-        tk.Frame.__init__(self, parent)
-        backgr = tk.Frame(self, borderwidth=1, relief="sunken")
-        backgr.pack(side="bottom", fill="both", expand=True)
+    coordsdrop.configure(text="x=%i ,y=%i" % (coords[0], coords[1]))
+    coordsrow.configure(text="x=%i ,y=%i" % (coords[2], coords[3]))
+
+def change_coords():
+    file = open("coordinates.txt", "w")
+    for i in range(4):
+        file.write(str(coords[i])+"\n")
+    file.close()
+
+
+    coordsdrop.configure(text="x=%i ,y=%i" % (coords[0], coords[1]))
+    coordsrow.configure(text="x=%i ,y=%i" % (coords[2], coords[3]))
+
+
+class Window(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
         
+        global coordsdrop, coordsrow, start_button, mouseposlbl, num_of_loops
 
-        self.mainframe = tk.Frame(self)
-        self.mainframe.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.7)
+        label_frame = tk.LabelFrame(master, text = "Countries (ctrl+alt+b)")
+        label_frame.pack(fill=tk.BOTH, padx=5, pady=10)
 
-        self.mainframe.grid_columnconfigure(0, weight=1)
-        
-        
-        tk.Label(self.mainframe, text="Country").grid(row=1, column=0, sticky="nw", pady=10)
-        tk.Label(self.mainframe, text="First Record Row").grid(row=2, column=0, sticky="nw", pady=10)
-
-
-        self.coordsdrop = tk.Label(self.mainframe)
-        self.coordsdrop.grid(row=1, column=1, sticky="nw", pady=10)
-
-        tk.Button(self.mainframe, text="Change", bg=purple,command=lambda set_button="drop": self.set_coords(set_button)).grid(row=1, column=2, sticky="nw", pady=10, padx=10)
-        tk.Button(self.mainframe, text="Check", bg=purple, command=lambda parent=root : CoordsCheck(parent)).grid(row=1, column=3, rowspan=2, sticky="NS", pady=10)
-
-        self.coordsrow = tk.Label(self.mainframe)
-        self.coordsrow.grid(row=2, column=1, sticky="nw", pady=10)
-
-        tk.Button(self.mainframe, text="Change", bg=purple, command=lambda set_button="row": self.set_coords(set_button)).grid(row=2, column=2, sticky="nw", pady=10, padx=10)
-        
-
-        self.start_button = tk.Button(self, text="Start", bg="green", command=self.start_script)
-        self.start_button.place(relx=0.015, rely=0.68, relwidth=0.97, relheight=0.30)
+        coordsdrop = tk.Label(label_frame, text="x0 - y0")
+        coordsdrop.pack(side=tk.RIGHT)
 
 
 
-#==========TIMER===================
-        #timer object
-        self.loop = tk.Label(root)
-        self.loop.place(x=0,y=0,width=0,height=0)
-        # start the timer
-        self.loop.after(100, self.timer)
+        label_frame = tk.LabelFrame(master, text = "First Row (ctrl+alt+m)")
+        label_frame.pack(fill=tk.BOTH, padx=5, pady=10)
 
-    def timer(self):
-        global override
+        coordsrow = tk.Label(label_frame, text="x0 - y0")
+        coordsrow.pack(side=tk.RIGHT)
 
-        window = check_CCT_availability()
-        excel = check_PeriodData()
-        check_coordinates()
+        label_frame = tk.LabelFrame(master, text = "Active mouse position")
+        label_frame.pack(fill=tk.BOTH, padx=5, pady=10)
 
-        self.coordsdrop.configure(text="x=%i ,y=%i" % (coords[0], coords[1]))
-        self.coordsrow.configure(text="x=%i ,y=%i" % (coords[2], coords[3]))
+        mouseposlbl = tk.Label(label_frame, text="xy")
+        mouseposlbl.pack(side=tk.RIGHT)
 
-        if override:
-            for proc in get_app_list():
-                if finished in proc[1]:
-                    override = False
-                    self.start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
 
-        if window:
-            start_check[0] = 0
-        else:
-            start_check[0] = 1
+        num_of_loops = tk.Entry(master, width = 2)
+        num_of_loops.insert(0, 73)
+        num_of_loops.pack(side=tk.RIGHT, padx = 5, pady = 5)
 
-        if excel:
-            start_check[3] = 1
-        else:
-            start_check[3] = 0
-        
-        if override == False:
-            if 1 not in start_check:
-                self.start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
-            else:
-                self.start_button.configure(text="Coordinates not set,\nPeriodData.xlsx is open\nor CCT window is not open.", bg="gray", disabledforeground="red", state=tk.DISABLED)
-        else:
-            pass
 
-        self.loop.after(1000, self.timer)
+        start_button = tk.Button(master, text="Start", bg="green", command=self.start_script)
+        start_button.pack(fill=tk.BOTH, expand=True, padx=5, pady=10)
 
-    
 
-    def set_coords(self, set_button):
-        CoordsSet(root, set_button)
-        
     def start_script(self):
-        global override
+        global process
+        start_button.configure(text="Running... Please Wait.", bg="gray", state=tk.DISABLED)
 
-        override = True
-        self.start_button.configure(text="Running... Please Wait.", bg="gray", state=tk.DISABLED)
 
+        nloops = int(num_of_loops.get())
 
         # ctm(x1=coords[0], y1=coords[1], x2=coords[2], y2=coords[3]))
-        process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3]))
+        process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3], nloops))
         process.start()
-        
 
 
-class CoordsSet():
-    def __init__(self, parent, set_button):
-        self.top = tk.Toplevel()
-        self.top.title("lines test")
-        self.top.wm_attributes("-topmost", 1)
-        self.top.attributes("-alpha", 0.5)
-        self.top.attributes("-fullscreen", True)
-        self.top.geometry("%ix%i+%i+%i" % (scr_width, scr_height, scr_w_placement, 0)) #WidthxHeight and x+y of main window
-        self.top.overrideredirect(True) # removes title bar
-        self.top.focus_force()
-        self.top.bind("<Key-Escape>", self.close_top)
+def looped_task():
+    #check if extractor process is alive, and set start button accordingly
+    try:
+        if not process.is_alive():
+            start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
+    except: pass
 
 
-        self.backgr = tk.Canvas(self.top, background="white")
+    mpos = win32gui.GetCursorInfo()
+    mposxy = mpos[2]
+    mouseposlbl.configure(text="x%i, y%i" % (mposxy[0], mposxy[1]))
 
-        self.linex = self.backgr.create_line(0, 0, 0, 0, width=1)
-        self.liney = self.backgr.create_line(0, 0, 0, 0, width=1)
+    root.after(2000, looped_task)  # reschedule event in 2 seconds
 
-        self.linexperm = self.backgr.create_line(0, 0, 0, 0, width=1)
-        self.lineyperm = self.backgr.create_line(0, 0, 0, 0, width=1)
-
-        self.backgr.pack(side="bottom", fill="both", expand=True)
-        self.backgr.bind("<Button-1>", lambda event, set_button=set_button : get_mouse_pos(event, set_button))
-        self.backgr.bind("<Motion>", self.crosshair)
-        
-        tk.Label(self.backgr, text="Press \"Esc\" to close the coordinates window", bg="white" ,foreground="red", font=("Helvetica", 50)).place(relx=0.15, rely=0.85)
-        
-        
-    def crosshair(self, event):
-        self.mpos = win32gui.GetCursorInfo()
-        self.mposxy = self.mpos[2]
-        self.newcoordsx = (self.mposxy[0], self.mposxy[1]-50, self.mposxy[0], self.mposxy[1]+50)
-        self.backgr.coords(self.linex, self.newcoordsx)
-        
-        self.newcoordsy = (self.mposxy[0]-50, self.mposxy[1], self.mposxy[0]+50, self.mposxy[1])
-        self.backgr.coords(self.liney, self.newcoordsy)
-
-
-
-    def close_top(self, event):
-        self.top.destroy()
-
-
-
-class CoordsCheck():
-    def __init__(self, parent):
-        self.top = tk.Toplevel()
-        self.top.title("lines test")
-        self.top.wm_attributes("-topmost", 1)
-        self.top.attributes("-alpha", 0.5)
-        self.top.attributes("-fullscreen", True)
-        self.top.geometry("%ix%i+%i+%i" % (scr_width, scr_height, scr_w_placement, 0)) #WidthxHeight and x+y of main window
-        self.top.overrideredirect(True) # removes title bar
-        self.top.focus_force()
-        self.top.bind("<Key-Escape>", self.close_top)
-
-
-        self.backgr = tk.Canvas(self.top, background="white")
-
-        self.linexdrop = self.backgr.create_line(coords[0], coords[1]-50, coords[0], coords[1]+50, width=1)
-        self.lineydrop = self.backgr.create_line(coords[0]-50, coords[1], coords[0]+50, coords[1], width=1)
-
-        self.linexrow = self.backgr.create_line(coords[2], coords[3]-50, coords[2], coords[3]+50, width=1)
-        self.lineyrow = self.backgr.create_line(coords[2]-50, coords[3], coords[2]+50, coords[3], width=1)
-
-        self.backgr.pack(side="bottom", fill="both", expand=True)
-
-        
-        tk.Label(self.backgr, text="Press \"Esc\" to close the coordinates window", bg="white" ,foreground="red", font=("Helvetica", 50)).place(relx=0.15, rely=0.85)
-        
-
-    def close_top(self, event):
-        self.top.destroy()
 
 if __name__ == '__main__':
     root = tk.Tk()   
     root.title("CTM Data Downloader")
-
     root.option_add('*font', ("Helvetica", 15))
     root.option_add('*foreground', ("white"))
     root.option_add('*background', (dark_gray))
-    
-    root.configure(background="yellow")
+    root.configure(background=dark_gray)
     root.wm_attributes("-topmost", 1)
-    root.wm_attributes("-transparentcolor", "yellow")
-    root.attributes("-alpha", 0.95)
-    root.geometry("%ix%i+%i+%i" % (500, scr_height/3, 750, 450)) #WidthxHeight and x+y of main window
+    root.geometry("350x300+750+300") #WidthxHeight and x+y of main window
+    root.attributes('-toolwindow', True)
+    root.resizable(0,0)
+    
+    
+
+    
+
+    window = Window(root)
+    root.after(2000, looped_task)
 
     load_coords()
 
-    ui = UI(root)
-    ui.place(relwidth=1, relheight=1)
-    
     root.mainloop()
+
+

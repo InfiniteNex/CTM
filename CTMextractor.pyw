@@ -12,7 +12,55 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 
 
 
-def ctm(x1, y1, x2, y2):
+def load_aliases():
+    global alias
+    alias = {}
+
+    file = open('distalias.txt', 'r')
+    alias_file = file.readlines()
+    file.close()
+
+
+    for line in alias_file:
+        l = line.split(sep="=")
+        alias[l[0]] = l[1].strip("\n")
+
+def load_special_cases():
+    global special
+    special = []
+
+    file = open('distspecial.txt', 'r')
+    special_file = file.readlines()
+    file.close()
+
+    for line in special_file:
+        special.append(line)
+
+def load_ignore_list():
+    global ignore
+    ignore = []
+    file = open('distignore.txt', 'r')
+    ignore_file = file.readlines()
+    file.close()
+
+    for line in ignore_file:
+        ignore.append(line)
+
+def load_countries_filter():
+    global countries_filter
+    countries_filter = {}
+
+    file = open('countries.txt', 'r')
+    filter_file = file.readlines()
+    file.close()
+
+
+    for line in filter_file:
+        l = line.split(sep="=")
+        countries_filter[l[0]] = l[1].strip("\n")
+
+
+def ctm(x1, y1, x2, y2, num_of_loops):
 
     def terminate():
         if keyboard.is_pressed('num *'):
@@ -31,43 +79,18 @@ def ctm(x1, y1, x2, y2):
     no_records_found = "TDistribution Panel CCT *WARNING - \\\\Remote"
     change_country_error = "Distribution Panel CCT *ERROR - \\\\Remote"
 
-    total_countries = 33 #total: 33
+    total_countries = num_of_loops #total: 73 | 33
 
     data_list = []
 
-    #load aliases
-    alias = {}
 
-    file = open('distalias.txt', 'r')
-    alias_file = file.readlines()
-    file.close()
+    load_aliases()
 
+    load_special_cases()
 
-    for line in alias_file:
-        l = line.split(sep="=")
-        alias[l[0]] = l[1].strip("\n")
+    load_ignore_list()
 
-
-    #load special cases
-    special = []
-
-    file = open('distspecial.txt', 'r')
-    special_file = file.readlines()
-    file.close()
-
-    for line in special_file:
-        special.append(line)
-
-
-    #load ignore list
-    ignore = []
-    file = open('distignore.txt', 'r')
-    ignore_file = file.readlines()
-    file.close()
-
-    for line in ignore_file:
-        ignore.append(line)
-
+    load_countries_filter()
 
 
     def sleep(sec=0.5):
@@ -130,7 +153,13 @@ def ctm(x1, y1, x2, y2):
         sleep(3)
         data = pd.read_clipboard(sep='\t')
         sleep(1)
-        data_list.append(data)
+
+        #evaluate if the current copied data's country is true or false in the countries filter list
+        # if its true, add it to the final data_list, otherwise skip it 
+
+        if (countries_filter[data.iloc[1,1]]) == "True":
+            data_list.append(data)
+
         sleep()
         
 
