@@ -13,3 +13,4 @@ _______________________________
 ### * distalias.txt - full list of distributors and their alias to be used as a final table substitute
 ### * distignore.txt - list of distributors to be ignored and not put in the final table
 ### * distspecial.txt - list of distributors to be marked as special case in the final table
+### * countries.txt - list of all countries in the ctm tool. True after a country means it will be added to the final data set. False means it will be ignored.
