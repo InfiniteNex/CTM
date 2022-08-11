@@ -157,8 +157,14 @@ def ctm(x1, y1, x2, y2, num_of_loops):
         #evaluate if the current copied data's country is true or false in the countries filter list
         # if its true, add it to the final data_list, otherwise skip it 
 
-        if (countries_filter[data.iloc[1,1]]) == "True":
-            data_list.append(data)
+
+
+        try:
+            if (countries_filter[data.iloc[1,1]]) == "True":
+                data_list.append(data)
+        except:
+            if (countries_filter[data.iloc[0,1]]) == "True":
+                data_list.append(data) 
 
         sleep()
         

@@ -111,6 +111,7 @@ class Window(tk.Frame):
         start_button.pack(fill=tk.BOTH, expand=True, padx=5, pady=10)
 
 
+
     def start_script(self):
         global process
         start_button.configure(text="Running... Please Wait.", bg="gray", state=tk.DISABLED)
@@ -121,6 +122,7 @@ class Window(tk.Frame):
         # ctm(x1=coords[0], y1=coords[1], x2=coords[2], y2=coords[3]))
         process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3], nloops))
         process.start()
+
 
 
 def looped_task():
@@ -150,14 +152,10 @@ if __name__ == '__main__':
     root.attributes('-toolwindow', True)
     root.resizable(0,0)
     
-    
-
-    
-
     window = Window(root)
     root.after(2000, looped_task)
-
     load_coords()
+
 
     root.mainloop()
 
