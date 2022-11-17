@@ -63,7 +63,7 @@ def load_countries_filter():
 def ctm(x1, y1, x2, y2, num_of_loops):
 
     def terminate():
-        if keyboard.is_pressed('num *'):
+        if keyboard.is_pressed('end'):
             pyautogui.alert(text='Process was force stopped.', title='Alert! CCT data downloader', button='OK')
             quit()
 
@@ -149,7 +149,7 @@ def ctm(x1, y1, x2, y2, num_of_loops):
         keyboard.send('ctrl+a')
         sleep()
         # copy and add to dataframe
-        keyboard.press_and_release('ctrl+c')
+        keyboard.send('ctrl+c') #shows windows sound menu on copy
         sleep(3)
         data = pd.read_clipboard(sep='\t')
         sleep(1)

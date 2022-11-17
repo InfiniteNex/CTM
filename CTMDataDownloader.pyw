@@ -12,7 +12,7 @@ from CTMextractor import ctm
 import keyboard
 import time
 import threading
-
+import sys
 
 
 
@@ -120,9 +120,18 @@ class Window(tk.Frame):
         nloops = int(num_of_loops.get())
 
         # ctm(x1=coords[0], y1=coords[1], x2=coords[2], y2=coords[3]))
-        process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3], nloops))
-        process.start()
 
+
+
+        try:
+            process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3], nloops))
+            process.start()
+        except Exception as e:
+            crash=["Error on line {}".format(sys.exc_info()[-1].tb_lineno),"\n",e]
+            with open("CRASH.txt","w") as crashLog:
+                for i in crash:
+                    i=str(i)
+                    crashLog.write(i)
 
 
 def looped_task():
