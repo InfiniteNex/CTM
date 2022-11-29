@@ -1,16 +1,20 @@
 import keyboard
-import win32gui
-import win32ui
-import os
+#import win32gui
+#import win32ui
+#import os
 import time
 import pyautogui
 from pyWinActivate import win_activate, win_wait_active, get_app_list
 import pandas as pd
-import clipboard
+#import clipboard
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+import sys
 
 
+# index 0,1 = country dropdown menu
+# index 2,3 = first data row
+coords = [0,0,0,0]
 
 def load_aliases():
     global alias
@@ -23,7 +27,9 @@ def load_aliases():
 
     for line in alias_file:
         l = line.split(sep="=")
-        alias[l[0]] = l[1].strip("\n")
+        try:
+            alias[l[0]] = l[1].strip("\n")
+        except: pass
 
 def load_special_cases():
     global special
@@ -34,7 +40,9 @@ def load_special_cases():
     file.close()
 
     for line in special_file:
-        special.append(line)
+        try:
+            special.append(line)
+        except: pass
 
 def load_ignore_list():
     global ignore
@@ -44,7 +52,9 @@ def load_ignore_list():
     file.close()
 
     for line in ignore_file:
-        ignore.append(line)
+        try:
+            ignore.append(line)
+        except: pass
 
 def load_countries_filter():
     global countries_filter
@@ -56,16 +66,28 @@ def load_countries_filter():
 
 
     for line in filter_file:
-        l = line.split(sep="=")
-        countries_filter[l[0]] = l[1].strip("\n")
-
+        try:
+            l = line.split(sep="=")
+            countries_filter[l[0]] = l[1].strip("\n")
+        except: pass
+        
+def load_coords():
+    try:
+        file = open("coordinates.txt", "r").readlines()
+        for i, line in enumerate(file):
+           line = line.split("\n")
+           coords[i] = (int(line[0]))
+    except FileNotFoundError:
+        print("File \"coordinates.txt\" not found.")
+        pyautogui.alert(text='coordinates.txt not found.', title='CCT data downloader ERROR!', button='OK')
+        sys.exit()
+        
 
 def ctm(x1, y1, x2, y2, num_of_loops):
-
     def terminate():
-        if keyboard.is_pressed('end'):
+        if keyboard.is_pressed('backspace'):
             pyautogui.alert(text='Process was force stopped.', title='Alert! CCT data downloader', button='OK')
-            quit()
+            sys.exit()
 
     """ ALL POSSIBLE WINDOWS'S TITLES
     Distribution Panel CCT @GfK - [dip.gfk.com][01.02.07] - \\\\Remote
@@ -91,6 +113,8 @@ def ctm(x1, y1, x2, y2, num_of_loops):
     load_ignore_list()
 
     load_countries_filter()
+
+    
 
 
     def sleep(sec=0.5):
@@ -355,3 +379,8 @@ def ctm(x1, y1, x2, y2, num_of_loops):
 
     # display message box when finished
     pyautogui.alert(text='Downloading data from CCT has finished.', title='Alert! CCT data downloader', button='OK')
+    sys.exit()
+
+if __name__ == "__main__":
+    load_coords()
+    ctm(coords[0], coords[1], coords[2], coords[3], 73)

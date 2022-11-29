@@ -1,18 +1,19 @@
-from ast import Global
-from cProfile import label
+#from ast import Global
+#from cProfile import label
 import tkinter as tk
-from tkinter import simpledialog
-from tkinter import messagebox as tkMessageBox
-import win32api
+#from tkinter import simpledialog
+#from tkinter import messagebox as tkMessageBox
+#import win32api
 import win32gui
-import win32process
-import os
-from pyWinActivate import win_activate, get_app_list
+#import win32process
+#import os
+#from pyWinActivate import win_activate, get_app_list
 from CTMextractor import ctm
 import keyboard
-import time
+#import time
 import threading
-import sys
+#import sys
+import pyautogui
 
 
 
@@ -124,14 +125,13 @@ class Window(tk.Frame):
 
 
         try:
+            print("Starting threaded process...")
             process = threading.Thread(target=ctm, args=(coords[0], coords[1], coords[2], coords[3], nloops))
             process.start()
         except Exception as e:
-            crash=["Error on line {}".format(sys.exc_info()[-1].tb_lineno),"\n",e]
-            with open("CRASH.txt","w") as crashLog:
-                for i in crash:
-                    i=str(i)
-                    crashLog.write(i)
+            print("Threaded process start failed.")
+            print(e)
+            pyautogui.alert(text='Threaded process start failed.\n{e}', title='CCT data downloader ERROR!', button='OK')
 
 
 def looped_task():
@@ -139,6 +139,7 @@ def looped_task():
     try:
         if not process.is_alive():
             start_button.configure(text="Start", bg="green", fg="white", state=tk.NORMAL)
+            print("Threaded process not found.")
     except: pass
 
 
